@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external
+---
+# PVC for Kavita app data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kavita-pvc
+  namespace: external
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+---
+# PV for NFS /comics
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comics-pv
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /comics
+    server: 192.168.0.222
+  mountOptions:
+    - nfsvers=4.1
+---
+# PVC that binds to the NFS PV
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: comics-pvc
+  namespace: external
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 500Gi
+  volumeName: comics-pv
+  storageClassName: ""
+---
+# Kavita Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kavita
+  namespace: external
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kavita
+  template:
+    metadata:
+      labels:
+        app: kavita
+    spec:
+      containers:
+      - name: kavita
+        image: lscr.io/linuxserver/kavita:latest
+        ports:
+          - containerPort: 5000
+        volumeMounts:
+          - name: data
+            mountPath: /app/data
+          - name: comics
+            mountPath: /comics
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kavita-pvc
+        - name: comics
+          persistentVolumeClaim:
+            claimName: comics-pvc
+---
+# Kavita LoadBalancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kavita
+  namespace: external
+spec:
+  type: LoadBalancer
+  selector:
+    app: kavita
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  # Optional: assign a fixed IP from your MetalLB/klipper pool
+  loadBalancerIP: 192.168.X.202

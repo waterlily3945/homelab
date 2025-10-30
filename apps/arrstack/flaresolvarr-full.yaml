@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arrstack
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaresolvarr
+  namespace: arrstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flaresolvarr
+  template:
+    metadata:
+      labels:
+        app: flaresolvarr
+    spec:
+      containers:
+      - name: flaresolvarr
+        image: ghcr.io/flaresolverr/flaresolverr:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flaresolvarr
+  namespace: arrstack
+spec:
+  selector:
+    app: flaresolvarr
+  ports:
+  - port: 80
+    targetPort: 8191
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flaresolvarr-ingress
+  namespace: arrstack
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: flaresolvarr.HOSTNAME.com  # <-- change to your DNS
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: flaresolvarr
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - flaresolvarr.HOSTNAME.com
+    secretName: flaresolvarr-cert
