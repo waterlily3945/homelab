@@ -46,7 +46,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: flaresolvarr.HOSTNAME.com  # <-- change to your DNS
+  - host: flaresolvarr.HOSTNAME.com 
     http:
       paths:
       - path: /
