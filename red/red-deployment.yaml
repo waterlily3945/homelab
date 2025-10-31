@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red-discord-bot
+  namespace: discord-bots
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: red-bot
+  template:
+    metadata:
+      labels:
+        app: red-bot
+    spec:
+      containers:
+      - name: red-bot
+        image: phasecorex/red-discordbot:latest
+        env:
+          - name: TOKEN
+            value: "DISCORDTOKEN"
+          - name: PREFIX
+            value: "."
+          - name: OWNER
+            value: "OWNERID"
+        volumeMounts:
+          - name: red-bot-data
+            mountPath: /data
+      volumes:
+        - name: red-bot-data
+          persistentVolumeClaim:
+            claimName: red-bot-pvc
