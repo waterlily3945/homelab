@@ -72,7 +72,7 @@ spec:
           - containerPort: 5000
         volumeMounts:
           - name: data
-            mountPath: /app/data
+            mountPath: /config
           - name: comics
             mountPath: /comics
       volumes:
