@@ -98,4 +98,4 @@ spec:
       port: 5000
       targetPort: 5000
   # Optional: assign a fixed IP from your MetalLB/klipper pool
-  loadBalancerIP: 192.168.X.202
+  loadBalancerIP: 192.168.X.202 
