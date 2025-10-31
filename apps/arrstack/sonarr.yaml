@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-pvc
+  namespace: arrstack
+spec:
+  accessModes:
+    - ReadWriteOnce            
+  resources:
+    requests:
+      storage: 5ßGi 
+  storageClassName: longhorn 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr            
+  namespace: arrstack      
+spec:
+  replicas: 1        
+  selector:
+    matchLabels:
+      app: sonarr         
+  template:
+    metadata:
+      labels:
+        app: sonarr       
+    spec:
+      containers:
+      - name: sonarr      
+        image: linuxserver/sonarr:latest        
+        ports:
+        - containerPort: 8989
+        volumeMounts:
+        - name: sonarr-data
+          mountPath: /config
+        - name: mnt
+          mountPath: /mnt
+      volumes:
+      - name: sonarr-data
+        persistentVolumeClaim:
+          claimName: sonarr-pvc
+      - name: mnt
+        nfs:
+            server: 192.168.0.222
+            path: /Big_Lad
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: arrstack
+spec:
+  selector:
+    app: sonarr
+  ports:
+  - port: 80
+    targetPort: 8989
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sonarr-ingress
+  namespace: arrstack
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: sonarr.HOSTNAME.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sonarr
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - sonarr.HOSTNAME.com
+    secretName: sonarr-cert
