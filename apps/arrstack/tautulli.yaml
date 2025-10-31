@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tautulli-pvc
+  namespace: arrstack 
+spec:
+  accessModes:
+    - ReadWriteOnce             
+  resources:
+    requests:
+      storage: 2Gi 
+  storageClassName: longhorn  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tautulli            
+  namespace: arrstack      
+spec:
+  replicas: 1       
+  selector:
+    matchLabels:
+      app: tautulli        
+  template:
+    metadata:
+      labels:
+        app: tautulli       
+    spec:
+      containers:
+      - name: tautulli
+        image: tautulli/tautulli:latest
+        ports:
+        - containerPort: 8181 # <-- UPDATE: port container listens on
+        volumeMounts:
+        - name: tautulli-data
+          mountPath: /config         # <-- Where to mount the PVC inside container
+      volumes:
+      - name: tautulli-data
+        persistentVolumeClaim:
+          claimName: tautulli-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tautulli          
+  namespace: arrstack
+spec:
+  selector:
+    app: tautulli         
+  ports:
+  - port: 80    
+    targetPort: 8181 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tautulli-ingress
+  namespace: arrstack
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: tautulli.HOSTNAME.com 
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tautulli
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - tautulli.HOSTNAME.com
+    secretName: tautulli-cert     
