@@ -29,4 +29,8 @@ phsyical nodes running all my worker pods with distrubed storage and high availa
 
 The start of the YAML was written with help of ai but as my skills grew I began to write it myself based on templates from online and AI
 
-the EXT Folder is all of my externally accessible items that are also behind a bunkerweb instance for higher security, everything else is purly internal. 
+the EXT Folder is all of my externally accessible items that are also behind a bunkerweb instance for higher security
+
+The apps folder are all of my manifests I feel comfortable posting publically
+
+template-full-storage.yaml is what I use as a starting point for new pod deployments
