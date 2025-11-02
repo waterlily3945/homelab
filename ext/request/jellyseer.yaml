@@ -49,7 +49,7 @@ metadata:
   name: jellyseerr
   namespace: external
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.X.203  # <-- pick an unused IP in your LAN
+    metallb.universe.tf/loadBalancerIPs: 192.168.5.203  # <-- pick an unused IP in your LAN
 spec:
   selector:
     app: jellyseerr
