@@ -71,7 +71,7 @@ metadata:
   name: audiobookshelf
   namespace: external
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.X.204  # <-- choose a free LAN IP
+    metallb.universe.tf/loadBalancerIPs: 192.168.5.204  # <-- choose a free LAN IP
 spec:
   selector:
     app: audiobookshelf
