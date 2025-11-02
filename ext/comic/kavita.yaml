@@ -17,38 +17,6 @@ spec:
     requests:
       storage: 10Gi
 ---
-# PV for NFS /comics
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: comics-pv
-spec:
-  capacity:
-    storage: 500Gi
-  accessModes:
-    - ReadOnlyMany
-  persistentVolumeReclaimPolicy: Retain
-  nfs:
-    path: /comics
-    server: 192.168.0.222
-  mountOptions:
-    - nfsvers=4.1
----
-# PVC that binds to the NFS PV
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: comics-pvc
-  namespace: external
-spec:
-  accessModes:
-    - ReadOnlyMany
-  resources:
-    requests:
-      storage: 500Gi
-  volumeName: comics-pv
-  storageClassName: ""
----
 # Kavita Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -80,8 +48,9 @@ spec:
           persistentVolumeClaim:
             claimName: kavita-pvc
         - name: comics
-          persistentVolumeClaim:
-            claimName: comics-pvc
+          nfs:
+            server: 192.168.0.222
+            path: /comics
 ---
 # Kavita LoadBalancer Service
 apiVersion: v1
