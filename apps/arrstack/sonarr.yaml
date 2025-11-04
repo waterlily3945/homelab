@@ -8,7 +8,7 @@ spec:
     - ReadWriteOnce            
   resources:
     requests:
-      storage: 5ßGi 
+      storage: 10Gi 
   storageClassName: longhorn 
 ---
 apiVersion: apps/v1
@@ -28,7 +28,12 @@ spec:
     spec:
       containers:
       - name: sonarr      
-        image: linuxserver/sonarr:latest        
+        image: linuxserver/sonarr:latest
+        env:
+          - name: PUID
+            value: "100"
+          - name: PGID
+            value: "100"
         ports:
         - containerPort: 8989
         volumeMounts:
@@ -42,7 +47,7 @@ spec:
           claimName: sonarr-pvc
       - name: mnt
         nfs:
-            server: 192.168.X.X
+            server: 192.168.0.222
             path: /Big_Lad
 ---
 apiVersion: v1
@@ -67,7 +72,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: sonarr.HOSTNAME.com
+  - host: sonarr.beanieiscool.com
     http:
       paths:
       - path: /
@@ -79,5 +84,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - sonarr.HOSTNAME.com
+    - sonarr.beanieiscool.com
     secretName: sonarr-cert
