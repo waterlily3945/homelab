@@ -35,7 +35,7 @@ spec:
           - name: ALLOW_SIGNUP
             value: "true"
           - name: BASE_URL
-            value: "https://recipes.HOSTNAME.com" 
+            value: "https://recipes.beanieiscool.com" 
           - name: TZ
             value: "America/Chicago"
         volumeMounts:
