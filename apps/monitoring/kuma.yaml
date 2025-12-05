@@ -66,7 +66,7 @@ metadata:
 spec:
   ingressClassName: traefik  
   rules:
-  - host: kuma.HOSTNAME.com                  
+  - host: kuma.beanieiscool.com                  
     http:
       paths:
       - path: /
@@ -78,5 +78,5 @@ spec:
               number: 80  
   tls:
   - hosts:
-    - kuma.HOSTNAME.com                   
+    - kuma.beanieiscool.com                   
     secretName: uptimekuma-cert      
