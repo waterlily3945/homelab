@@ -61,7 +61,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: tautulli.HOSTNAME.com 
+  - host: tautulli.beanieiscool.com 
     http:
       paths:
       - path: /
@@ -73,5 +73,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - tautulli.HOSTNAME.com
+    - tautulli.beanieiscool.com
     secretName: tautulli-cert     

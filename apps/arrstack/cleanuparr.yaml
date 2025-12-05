@@ -61,7 +61,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: cleanuparr.HOSTNAME.com
+  - host: cleanuparr.beanieiscool.com
     http:
       paths:
       - path: /
@@ -73,5 +73,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - cleanuparr.HOSTNAME.com
+    - cleanuparr.beanieiscool.com
     secretName: cleanuparr-cert

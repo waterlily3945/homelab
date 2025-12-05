@@ -67,7 +67,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: kapowarr.HOSTNAME.com
+  - host: kapowarr.beanieiscool.com
     http:
       paths:
       - path: /
@@ -79,5 +79,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - kapowarr.HOSTNAME.com
+    - kapowarr.beanieiscool.com
     secretName: kapowarr-cert

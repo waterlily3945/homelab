@@ -61,7 +61,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: prowlarr.HOSTNAME.com
+  - host: prowlarr.beanieiscool.com
     http:
       paths:
       - path: /
@@ -73,5 +73,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - prowlarr.HOSTNAME.com
+    - prowlarr.beanieiscool.com
     secretName: prowlarr-cert

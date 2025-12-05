@@ -46,7 +46,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: flaresolvarr.HOSTNAME.com 
+  - host: flaresolvarr.beanieiscool.com 
     http:
       paths:
       - path: /
@@ -58,5 +58,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - flaresolvarr.HOSTNAME.com
+    - flaresolvarr.beanieiscool.com
     secretName: flaresolvarr-cert
