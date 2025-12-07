@@ -10,6 +10,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -31,9 +32,9 @@ spec:
           image: adguard/adguardhome:latest
           ports:
             - name: http
-              containerPort: 3000   # setup UI
+              containerPort: 3000
             - name: web
-              containerPort: 80     # main UI
+              containerPort: 80
             - name: dns-tcp
               containerPort: 53
               protocol: TCP
@@ -51,6 +52,7 @@ spec:
             claimName: adguardhome-data
         - name: work
           emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
@@ -59,7 +61,8 @@ metadata:
   namespace: adguard
 spec:
   type: LoadBalancer
-  loadBalancerIP: 192.168.5.210     # MetalLB IP
+  loadBalancerIP: 192.168.5.210   # MetalLB IP
+  externalTrafficPolicy: Local    # <-- Preserve real client IP
   selector:
     app: adguardhome
   ports:
@@ -75,6 +78,7 @@ spec:
       port: 53
       targetPort: 53
       protocol: UDP
+
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -83,8 +87,13 @@ metadata:
   namespace: adguard
   annotations:
     kubernetes.io/ingress.class: "traefik"
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
+  tls:
+    - hosts:
+        - dns.beanieiscool.com
+      secretName: adguardhome-tls
   rules:
     - host: dns.beanieiscool.com
       http:
@@ -96,7 +105,3 @@ spec:
                 name: adguardhome
                 port:
                   number: 80
-  tls:
-    - hosts:
-        - dns.beanieiscool.com
-      secretName: adguardhome-tls
