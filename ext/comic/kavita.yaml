@@ -46,6 +46,10 @@ spec:
           nfs:
             server: 192.168.0.222
             path: /comics
+        - name: books
+          nfs:
+            server: 192.168.0.222
+            path: /books
 ---
 # Kavita LoadBalancer Service
 apiVersion: v1
