@@ -38,6 +38,8 @@ spec:
             mountPath: /config
           - name: comics
             mountPath: /comics
+          - name: books
+            mountPath: /books
       volumes:
         - name: data
           persistentVolumeClaim:
