@@ -1,19 +1,39 @@
+---
+# ===============================
+# Namespace
+# ===============================
 apiVersion: v1
 kind: Namespace
 metadata:
   name: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
+
 ---
+# ===============================
+# ServiceAccount
+# ===============================
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: system-upgrade
   namespace: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 
 ---
+# ===============================
+# ClusterRole
+# ===============================
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 rules:
 - apiGroups: [""]
   resources: ["nodes", "pods", "pods/log", "namespaces"]
@@ -29,25 +49,37 @@ rules:
   verbs: ["create", "get", "list", "watch", "delete"]
 
 ---
+# ===============================
+# ClusterRoleBinding
+# ===============================
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: system-upgrade
 subjects:
-- kind: ServiceAccount
-  name: system-upgrade
-  namespace: system-upgrade
+  - kind: ServiceAccount
+    name: system-upgrade
+    namespace: system-upgrade
 
 ---
+# ===============================
+# Deployment
+# ===============================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: system-upgrade-controller
   namespace: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 spec:
   replicas: 1
   selector:
@@ -69,17 +101,37 @@ spec:
         args:
           - --name=system-upgrade-controller
           - --namespace=system-upgrade
+        imagePullPolicy: IfNotPresent
+
 ---
-# =================================
-#   K3S SERVER PLAN (CONTROL-PLANE)
-# =================================
+# ===============================
+# K3s VERSION VARIABLE
+# ===============================
+# Change this value to upgrade your cluster
+# Example: v1.34.6+k3s1
+# ===============================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: system-upgrade-version
+  namespace: system-upgrade
+data:
+  k3s-version: "v1.33.5+k3s1"
+
+---
+# ===============================
+# K3s SERVER PLAN
+# ===============================
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
   name: k3s-server-plan
   namespace: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 spec:
-  version: v1.33.5+k3s1
+  version: "{{ .data.k3s-version }}"
   concurrency: 1
   serviceAccountName: system-upgrade
   nodeSelector:
@@ -94,16 +146,19 @@ spec:
     image: rancher/k3s-upgrade
 
 ---
-# =================================
-#   K3S AGENT PLAN (WORKERS)
-# =================================
+# ===============================
+# K3s AGENT PLAN
+# ===============================
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
   name: k3s-agent-plan
   namespace: system-upgrade
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/instance: system-upgrade
 spec:
-  version: v1.33.5+k3s1
+  version: "{{ .data.k3s-version }}"
   concurrency: 3
   serviceAccountName: system-upgrade
   nodeSelector:
