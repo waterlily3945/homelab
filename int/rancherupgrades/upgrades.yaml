@@ -62,13 +62,6 @@ spec:
       - name: system-upgrade-controller
         image: rancher/system-upgrade-controller:v0.13.3
         imagePullPolicy: IfNotPresent
-        resources:
-          limits:
-            cpu: 200m
-            memory: 200Mi
-          requests:
-            cpu: 50m
-            memory: 50Mi
 
 ---
 # =================================
