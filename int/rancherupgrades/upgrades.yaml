@@ -1,3 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system-upgrade
+
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -73,9 +80,9 @@ spec:
             memory: 50Mi
 
 ---
-# ===============================
-#   K3S SERVER (CONTROL-PLANE)
-# ===============================
+# =================================
+#   K3S SERVER PLAN (CONTROL-PLANE)
+# =================================
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
@@ -97,9 +104,9 @@ spec:
     image: rancher/k3s-upgrade
 
 ---
-# ===============================
-#   K3S AGENT (WORKERS)
-# ===============================
+# =================================
+#   K3S AGENT PLAN (WORKERS)
+# =================================
 apiVersion: upgrade.cattle.io/v1
 kind: Plan
 metadata:
