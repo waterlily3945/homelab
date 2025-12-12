@@ -83,7 +83,7 @@ metadata:
   namespace: system-upgrade
 spec:
   version: v1.33.5+k3s1
-  concurrence: 1
+  concurrency: 1
   serviceAccountName: system-upgrade
   nodeSelector:
     matchExpressions:
