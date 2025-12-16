@@ -1,0 +1,102 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: splunk-pvc
+  namespace: splunk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: splunk
+  namespace: splunk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: splunk
+  template:
+    metadata:
+      labels:
+        app: splunk
+    spec:
+      containers:
+        - name: splunk
+          image: splunk/splunk:9.2.1
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPLUNK_START_ARGS
+              value: "--accept-license"
+            - name: SPLUNK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: splunk-secrets
+                  key: SPLUNK_PASSWORD
+          ports:
+            - name: web
+              containerPort: 8000
+            - name: mgmt
+              containerPort: 8089
+          volumeMounts:
+            - name: splunk-data
+              mountPath: /opt/splunk
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 4Gi
+      volumes:
+        - name: splunk-data
+          persistentVolumeClaim:
+            claimName: splunk-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: splunk
+  namespace: splunk
+spec:
+  type: ClusterIP
+  selector:
+    app: splunk
+  ports:
+    - name: web
+      port: 8000
+      targetPort: 8000
+    - name: mgmt
+      port: 8089
+      targetPort: 8089
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: splunk
+  namespace: splunk
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - splunk.example.local
+      secretName: splunk-tls
+  rules:
+    - host: splunk.example.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: splunk
+                port:
+                  number: 8000
