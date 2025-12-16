@@ -51,7 +51,17 @@ spec:
                 secretKeyRef:
                   name: splunk-secrets
                   key: SPLUNK_PASSWORD
-          ports:
+            - name: SPLUNK_BUILD_TYPE
+              value: "ENTERPRISE"
+            - name: SPLUNK_UID
+              value: "41812"
+            - name: SPLUNK_GID
+              value: "41812"
+            - name: SPLUNK_USER
+              value: "splunk"
+            - name: SPLUNK_GROUP
+              value: "splunk"
+  ports:
             - name: web
               containerPort: 8000
             - name: mgmt
