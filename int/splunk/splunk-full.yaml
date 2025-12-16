@@ -27,6 +27,16 @@ spec:
       labels:
         app: splunk
     spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command:
+            - sh
+            - -c
+            - chown -R 41812:41812 /opt/splunk
+          volumeMounts:
+            - name: splunk-data
+              mountPath: /opt/splunk
       containers:
         - name: splunk
           image: splunk/splunk:9.2.1
@@ -39,6 +49,16 @@ spec:
                 secretKeyRef:
                   name: splunk-secrets
                   key: SPLUNK_PASSWORD
+            - name: SPLUNK_BUILD_TYPE
+              value: "enterprise"
+            - name: SPLUNK_UID
+              value: "41812"
+            - name: SPLUNK_GID
+              value: "41812"
+            - name: SPLUNK_USER
+              value: "splunk"
+            - name: SPLUNK_GROUP
+              value: "splunk"
           ports:
             - name: web
               containerPort: 8000
@@ -50,10 +70,10 @@ spec:
           resources:
             requests:
               cpu: 500m
-              memory: 1Gi
+              memory: 2Gi
             limits:
               cpu: 2
-              memory: 4Gi
+              memory: 6Gi
       volumes:
         - name: splunk-data
           persistentVolumeClaim:
@@ -87,10 +107,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - splunk.beanieiscool.com
+        - splunk.example.local
       secretName: splunk-tls
   rules:
-    - host: splunk.beanieiscool.com
+    - host: splunk.example.local
       http:
         paths:
           - path: /
