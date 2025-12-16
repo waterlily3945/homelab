@@ -107,10 +107,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - splunk.example.local
+        - splunk.beanieiscool.com
       secretName: splunk-tls
   rules:
-    - host: splunk.example.local
+    - host: splunk.beanieiscool.com
       http:
         paths:
           - path: /
