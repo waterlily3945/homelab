@@ -40,6 +40,11 @@ spec:
       labels:
         app: audiobookshelf
     spec:
+      securityContext:
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
+    spec:
       containers:
         - name: audiobookshelf
           image: advplyr/audiobookshelf:latest
