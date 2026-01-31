@@ -10,7 +10,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -24,14 +23,15 @@ spec:
   resources:
     requests:
       storage: 2Gi
-
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: StatefulSet
 metadata:
   name: adguardhome
   namespace: adguard
 spec:
+  serviceName: adguard
+  replicas: 1
   selector:
     matchLabels:
       app: adguardhome
@@ -40,28 +40,18 @@ spec:
       labels:
         app: adguardhome
     spec:
-      hostNetwork: true
-      dnsPolicy: Default
-      nodeSelector:
-        node-role.kubernetes.io/worker: "true"
-
       containers:
       - name: adguardhome
         image: adguard/adguardhome:latest
-        securityContext:
-          runAsUser: 0
         ports:
         - name: dns-udp
           containerPort: 53
-          hostPort: 53
           protocol: UDP
         - name: dns-tcp
           containerPort: 53
-          hostPort: 53
           protocol: TCP
         - name: web
           containerPort: 3000
-          hostPort: 3000
           protocol: TCP
         volumeMounts:
         - name: config
@@ -75,7 +65,6 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: adguard-data
-
 ---
 apiVersion: v1
 kind: Service
@@ -84,7 +73,7 @@ metadata:
   namespace: adguard
 spec:
   type: LoadBalancer
-  loadBalancerIP: 192.168.5.207
+  loadBalancerIP: 192.168.5.207   # your MetalLB IP
   externalTrafficPolicy: Local
   ports:
   - name: dns-udp
