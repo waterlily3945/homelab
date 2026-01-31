@@ -42,6 +42,9 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: Default
+      nodeSelector:
+        node-role.kubernetes.io/worker: "true"
+
       containers:
       - name: adguardhome
         image: adguard/adguardhome:latest
