@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: jellyseerr
-          image: seerr-team/seerr
+          image: seerr/seerr
           imagePullPolicy: Always
           ports:
             - containerPort: 5055
