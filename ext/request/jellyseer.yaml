@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: jellyseerr
-          image: fallenbagel/jellyseerr:latest
+          image: seerr-team/seerr
           imagePullPolicy: Always
           ports:
             - containerPort: 5055
