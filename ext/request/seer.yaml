@@ -46,7 +46,7 @@ metadata:
   name: seerr
   namespace: external
   annotations:
-    metallb.universe.tf/loadBalancerIPs: 192.168.5.203  # <-- pick an unused IP in your LAN
+    metallb.universe.tf/loadBalancerIPs: 192.168.5.203
 spec:
   selector:
     app: seerr
