@@ -41,9 +41,6 @@ spec:
         volumeMounts:
         - name: mealie-data-pvc
           mountPath: /app/data
-      - name: mealie-data-pvc
-        persistentVolumeClaim:
-          claimName: mealie-data-pvc
 ---
 apiVersion: v1
 kind: Service
