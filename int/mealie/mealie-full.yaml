@@ -39,8 +39,12 @@ spec:
           - name: TZ
             value: "America/Chicago"
         volumeMounts:
-        - name: mealie-data-pvc
-          mountPath: /app/data
+        - name: mealie-data
+          mountPath: /app/data       
+      volumes:
+      - name: mealie-data
+        persistentVolumeClaim:
+          claimName: mealie-data-pvc
 ---
 apiVersion: v1
 kind: Service
