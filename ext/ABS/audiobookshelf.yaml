@@ -89,17 +89,11 @@ metadata:
   name: audiobookshelf
   namespace: external
   annotations:
-    # 1. Cert-Manager ClusterIssuer
     cert-manager.io/cluster-issuer: letsencrypt-prod
-
-    # 2. Force TLS router creation on Traefik
     traefik.ingress.kubernetes.io/router.tls: "true"
-
-    # 3. Bind to entrypoints on the public controller
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-
-    # 4. Route through CrowdSec middleware
-    traefik.ingress.kubernetes.io/router.middlewares: crowdsec-crowdsec-traefik-bouncer@kubernetescrd
+    # Leave middleware out entirely until we verify it loads, or fix the name:
+    # traefik.ingress.kubernetes.io/router.middlewares: crowdsec-traefik-bouncer-external@kubernetescrd
 spec:
   ingressClassName: traefik-public
   rules:
