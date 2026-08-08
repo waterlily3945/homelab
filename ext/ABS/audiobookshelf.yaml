@@ -101,13 +101,13 @@ metadata:
     # 2. Force TLS router creation on Traefik
     traefik.ingress.kubernetes.io/router.tls: "true"
 
-    # 3. Bind to standard Traefik entrypoints
+    # 3. Bind to entrypoints on the public controller
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
 
     # 4. Route through CrowdSec middleware
     traefik.ingress.kubernetes.io/router.middlewares: crowdsec-crowdsec-traefik-bouncer@kubernetescrd
 spec:
-  ingressClassName: traefik
+  ingressClassName: traefik-public
   rules:
     - host: abs.wrightops.org
       http:
