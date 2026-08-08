@@ -91,9 +91,8 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-    # Leave middleware out entirely until we verify it loads, or fix the name:
-    traefik.ingress.kubernetes.io/router.middlewares: crowdsec-traefik-bouncer-external@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure-external
+    traefik.ingress.kubernetes.io/router.middlewares: external-crowdsec-traefik-bouncer@kubernetescrd
 spec:
   ingressClassName: traefik-public
   rules:
