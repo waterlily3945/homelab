@@ -95,13 +95,16 @@ metadata:
   name: audiobookshelf
   namespace: external
   annotations:
-    # Cluster Issuer matching your Mealie configuration
+    # 1. Cert-Manager ClusterIssuer
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    # Binds HTTP-01 challenge routing through traefik-public
-    acme.cert-manager.io/http01-ingress-class: traefik-public
-    # Entrypoints for 192.168.5.210 public IP
+
+    # 2. Force TLS router creation on Traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+
+    # 3. Bind strictly to public entrypoints (192.168.5.210)
     traefik.ingress.kubernetes.io/router.entrypoints: webpublic,webpublicsecure
-    # CrowdSec Protection
+
+    # 4. Route through CrowdSec middleware
     traefik.ingress.kubernetes.io/router.middlewares: crowdsec-crowdsec-traefik-bouncer@kubernetescrd
 spec:
   ingressClassName: traefik-public
