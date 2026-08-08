@@ -93,7 +93,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     # Leave middleware out entirely until we verify it loads, or fix the name:
-    # traefik.ingress.kubernetes.io/router.middlewares: crowdsec-traefik-bouncer-external@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: crowdsec-traefik-bouncer-external@kubernetescrd
 spec:
   ingressClassName: traefik-public
   rules:
