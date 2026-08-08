@@ -56,8 +56,6 @@ spec:
               mountPath: /metadata
             - name: audiobooks
               mountPath: /audiobooks
-            - name: podcasts
-              mountPath: /podcasts
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -69,10 +67,6 @@ spec:
           nfs:
             server: 192.168.0.222
             path: /ABS
-        - name: podcasts
-          nfs:
-            server: 192.168.0.222
-            path: /podcasts
 ---
 apiVersion: v1
 kind: Service
