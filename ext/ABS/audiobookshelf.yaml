@@ -86,27 +86,24 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: audiobookshelf
+  name: abs-ingress
   namespace: external
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure-external
-    traefik.ingress.kubernetes.io/router.middlewares: external-crowdsec-traefik-bouncer@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-prod 
 spec:
-  ingressClassName: traefik-public
+  ingressClassName: traefik         
   rules:
-    - host: abs.wrightops.org
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: audiobookshelf
-                port:
-                  number: 80
+  - host: abs.beanieiscool.com      
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: audiobookshelf
+            port:
+              number: 80
   tls:
-    - hosts:
-        - abs.wrightops.org
-      secretName: audiobookshelf-cert
+  - hosts:
+    - abs.beanieiscool.com
+    secretName: audiobookshelf-cert
