@@ -2,36 +2,113 @@ image:
   registry: ghcr.io
   repository: seerr-team/seerr
   pullPolicy: IfNotPresent
+  tag: ""
+  sha: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+probes:
+  livenessProbe:
+    initialDelaySeconds: 20
+    periodSeconds: 15
+    timeoutSeconds: 3
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 3
+  startupProbe: null
+
+extraEnv: []
+extraEnvFrom: []
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  privileged: false
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+dnsPolicy: ""
+dnsConfig: {}
+
+hostUsers: true
+priorityClassName: null
 
 service:
   type: ClusterIP
   port: 80
+  annotations: {}
 
-# -- Creating PVC to store configuration
 config:
   persistence:
-    # -- Size of persistent disk
     size: 5Gi
-    # -- Access modes of persistent disk
+    annotations: {}
     accessModes:
       - ReadWriteOnce
-    # -- Config name
-    name: 'seer-pvc'
-    # -- Name of the permanent volume to reference in the claim.
-    volumeName: 'seer-pvc'
-
+    name: seerr-config
+    volumeName: ""
+    existingClaim: ""
+    subPath: ""
+    storageClass: ""   # uses default storage class
 
 ingress:
   enabled: true
-  ingressClassName: 'traefik'
+  ingressClassName: nginx
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: request.beanieiscool.com
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
-  - hosts:
-    - request.beanieiscool.com
-    secretName: seer-cert
+    - secretName: seerr-tls
+      hosts:
+        - request.beanieiscool.com
+
+route:
+  main:
+    enabled: false
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    annotations: {}
+    labels: {}
+    parentRefs: []
+    hostnames: []
+    additionalRules: []
+    filters: []
+    matches:
+      - path:
+          type: PathPrefix
+          value: /
+    httpsRedirect: false
+
+resources: {}
+
+volumes: []
+volumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
