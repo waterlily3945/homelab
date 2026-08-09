@@ -1,0 +1,37 @@
+image:
+  registry: ghcr.io
+  repository: seerr-team/seerr
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+# -- Creating PVC to store configuration
+config:
+  persistence:
+    # -- Size of persistent disk
+    size: 5Gi
+    # -- Access modes of persistent disk
+    accessModes:
+      - ReadWriteOnce
+    # -- Config name
+    name: 'seer-pvc'
+    # -- Name of the permanent volume to reference in the claim.
+    volumeName: 'seer-pvc'
+
+
+ingress:
+  enabled: true
+  ingressClassName: 'traefik'
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: request.beanieiscool.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - request.beanieiscool.com
+    secretName: seer-cert
