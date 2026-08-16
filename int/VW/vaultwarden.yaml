@@ -31,6 +31,9 @@ spec:
         image: vaultwarden/server:latest        
         ports:
         - containerPort: 8080
+        env:
+          - name: DOMAIN
+            value: "https://vw.beanieiscool.com"
         volumeMounts:
         - name: vaultwarden-data
           mountPath: /data
@@ -61,7 +64,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: vm.beanieiscool.com
+  - host: vw.beanieiscool.com
     http:
       paths:
       - path: /
@@ -73,5 +76,5 @@ spec:
               number: 80
   tls:
   - hosts:
-    - vm.beanieiscool.com
+    - vw.beanieiscool.com
     secretName: vaultwarden-cert
