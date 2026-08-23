@@ -53,8 +53,6 @@ spec:
             value: "1"
           - name: TRMNL_PROXY_REFRESH_MINUTES
             value: "15"
-          - name: DB_DATABASE
-            value: "/var/www/html/database/storage/database.sqlite"
         volumeMounts:
         - name: larapaper-data
           mountPath: /var/www/html/storage/app/public/images/generated
