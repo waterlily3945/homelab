@@ -44,6 +44,17 @@ spec:
         image: ghcr.io/usetrmnl/larapaper:latest        
         ports:
         - containerPort: 8080
+        env:
+          - name: APP_KEY
+            value: "dRUPNvJ8pw6D6s/+WSBV7mUs75EWLAT9qc24zsed2xQ="
+          - name: APP_URL
+            value: "https://larapaper.beanieiscool.com" 
+          - name: PHP_OPCACHE_ENABLE
+            value: "1"
+          - name: TRMNL_PROXY_REFRESH_MINUTES
+            value: "15"
+          - name: DB_DATABASE
+            value: "database/storage/database.sqlite"
         volumeMounts:
         - name: larapaper-data
           mountPath: /var/www/html/storage/app/public/images/generated
