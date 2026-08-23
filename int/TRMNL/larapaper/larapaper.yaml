@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: larapaperDATA-pvc
+  name: larapaperdata-pvc
   namespace: trmnl 
 spec:
   accessModes:
@@ -14,7 +14,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: larapaperDB-pvc
+  name: larapaperdb-pvc
   namespace: trmnl 
 spec:
   accessModes:
@@ -52,10 +52,10 @@ spec:
       volumes:
       - name: larapaper-data
         persistentVolumeClaim:
-          claimName: larapaperDATA-pvc
+          claimName: larapaperdata-pvc
       - name: larapaper-db
         persistentVolumeClaim:
-          claimName: larapaperDB-pvc
+          claimName: larapaperdb-pvc
 ---
 apiVersion: v1
 kind: Service
