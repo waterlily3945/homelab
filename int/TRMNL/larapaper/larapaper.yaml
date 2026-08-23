@@ -57,6 +57,8 @@ spec:
             value: "15"
           - name: FORCE_HTTPS
             value: "1"
+          - name: DB_DATABASE
+            value: "database/storage/database.sqlite"
         volumeMounts:
         - name: larapaper-data
           mountPath: /var/www/html/storage/app/public/images/generated
