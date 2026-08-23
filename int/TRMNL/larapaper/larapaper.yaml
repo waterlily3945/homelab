@@ -39,6 +39,8 @@ spec:
       labels:
         app: larapaper       
     spec:
+      securityContext:
+        fsGroup: 82
       containers:
       - name: larapaper      
         image: ghcr.io/usetrmnl/larapaper:latest        
