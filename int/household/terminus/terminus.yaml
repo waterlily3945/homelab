@@ -1,40 +1,43 @@
-# Secrets - create this first before deploying
 apiVersion: v1
 kind: Secret
 metadata:
   name: terminus-secrets
+  namespace: terminus
 type: Opaque
-stringData:
-  DATABASE_URL: postgres://user:password@host:5432/terminus
-  APP_SECRET: GargoijSDLKvnAEOGINOWnvlskndgoaiwneg
+
 ---
-# ConfigMap for non-sensitive configuration
+# Non-sensitive configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: terminus-config
+  namespace: terminus
 data:
   RACK_ATTACK_ALLOWED_SUBNETS: "10.42.0.0/16"
-  TZ: "America/New_York"
+  TZ: "America/Chicago"
+
 ---
 # Valkey persistent storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: terminus-valkey-data
+  namespace: terminus
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: longhorn
   resources:
     requests:
       storage: 1Gi
+
 ---
-# Valkey for Sidekiq job queue
+# Valkey
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: terminus-valkey
+  namespace: terminus
 spec:
   replicas: 1
   selector:
@@ -46,197 +49,250 @@ spec:
         app: terminus-valkey
     spec:
       containers:
-      - name: valkey
-        image: valkey/valkey:8-alpine
-        ports:
-        - containerPort: 6379
-        volumeMounts:
-        - mountPath: /data
-          name: valkey-data
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
+        - name: valkey
+          image: valkey/valkey:8-alpine
+          ports:
+            - name: valkey
+              containerPort: 6379
+
+          volumeMounts:
+            - name: valkey-data
+              mountPath: /data
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
       volumes:
-      - name: valkey-data
-        persistentVolumeClaim:
-          claimName: terminus-valkey-data
+        - name: valkey-data
+          persistentVolumeClaim:
+            claimName: terminus-valkey-data
+
 ---
+# Valkey Service
 apiVersion: v1
 kind: Service
 metadata:
   name: terminus-valkey
+  namespace: terminus
 spec:
+  type: ClusterIP
   selector:
     app: terminus-valkey
   ports:
-  - port: 6379
-    targetPort: 6379
+    - name: valkey
+      port: 6379
+      targetPort: valkey
+
 ---
-# Persistent storage for uploads
+# Terminus uploads storage
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: terminus-uploads
+  namespace: terminus
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: longhorn
   resources:
     requests:
       storage: 2Gi
+
 ---
-# Main application + Sidekiq worker
+# Terminus application
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: terminus
+  namespace: terminus
 spec:
   replicas: 1
+
   strategy:
     type: Recreate
+
   selector:
     matchLabels:
       app.kubernetes.io/name: terminus
+
   template:
     metadata:
       labels:
         app.kubernetes.io/name: terminus
+
     spec:
       securityContext:
         fsGroup: 1000
+
       containers:
-      - name: terminus
-        image: ghcr.io/usetrmnl/terminus:latest
-        ports:
-        - containerPort: 2345
-          name: http
-        volumeMounts:
-        - mountPath: /app/public/uploads
-          name: data
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "200m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
-        env:
-        - name: TZ
-          valueFrom:
-            configMapKeyRef:
-              name: terminus-config
-              key: TZ
-        - name: APP_SETUP
-          value: "true"
-        - name: API_URI
-          value: https://terminus.example.com
-        - name: HANAMI_PORT
-          value: "2345"
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: terminus-secrets
-              key: DATABASE_URL
-        - name: APP_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: terminus-secrets
-              key: APP_SECRET
-        - name: RACK_ATTACK_ALLOWED_SUBNETS
-          valueFrom:
-            configMapKeyRef:
-              name: terminus-config
-              key: RACK_ATTACK_ALLOWED_SUBNETS
-        - name: KEYVALUE_URL
-          value: redis://terminus-valkey:6379
-      - name: sidekiq
-        image: ghcr.io/usetrmnl/terminus:latest
-        command: ["bundle", "exec", "sidekiq", "-r", "./config/sidekiq.rb"]
-        volumeMounts:
-        - mountPath: /app/public/uploads
-          name: data
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        env:
-        - name: TZ
-          valueFrom:
-            configMapKeyRef:
-              name: terminus-config
-              key: TZ
-        - name: API_URI
-          value: https://terminus.example.com
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: terminus-secrets
-              key: DATABASE_URL
-        - name: APP_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: terminus-secrets
-              key: APP_SECRET
-        - name: RACK_ATTACK_ALLOWED_SUBNETS
-          valueFrom:
-            configMapKeyRef:
-              name: terminus-config
-              key: RACK_ATTACK_ALLOWED_SUBNETS
-        - name: KEYVALUE_URL
-          value: redis://terminus-valkey:6379
+
+        # Main web application
+        - name: terminus
+          image: ghcr.io/usetrmnl/terminus:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 2345
+
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 200m
+            limits:
+              memory: 1Gi
+              cpu: 1000m
+
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: terminus-config
+                  key: TZ
+
+            - name: APP_SETUP
+              value: "true"
+
+            - name: API_URI
+              value: "https://terminus.beanieiscool.com"
+
+            - name: HANAMI_PORT
+              value: "2345"
+
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: DATABASE_URL
+
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: APP_SECRET
+
+            - name: RACK_ATTACK_ALLOWED_SUBNETS
+              valueFrom:
+                configMapKeyRef:
+                  name: terminus-config
+                  key: RACK_ATTACK_ALLOWED_SUBNETS
+
+            - name: KEYVALUE_URL
+              value: "redis://terminus-valkey:6379"
+
+        # Sidekiq worker
+        - name: sidekiq
+          image: ghcr.io/usetrmnl/terminus:latest
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - bundle
+            - exec
+            - sidekiq
+            - -r
+            - ./config/sidekiq.rb
+
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/uploads
+
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: terminus-config
+                  key: TZ
+
+            - name: API_URI
+              value: "https://terminus.beanieiscool.com"
+
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: DATABASE_URL
+
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: terminus-secrets
+                  key: APP_SECRET
+
+            - name: RACK_ATTACK_ALLOWED_SUBNETS
+              valueFrom:
+                configMapKeyRef:
+                  name: terminus-config
+                  key: RACK_ATTACK_ALLOWED_SUBNETS
+
+            - name: KEYVALUE_URL
+              value: "redis://terminus-valkey:6379"
+
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: terminus-uploads
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: terminus-uploads
+
 ---
+# Terminus Service
 apiVersion: v1
 kind: Service
 metadata:
   name: terminus
+  namespace: terminus
 spec:
-  ports:
-  - port: 80
-    targetPort: 2345
-    name: http
+  type: ClusterIP
+
   selector:
     app.kubernetes.io/name: terminus
+
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+
 ---
-# Envoy Gateway HTTPRoute (or use Ingress alternative above)
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+# Traefik Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: terminus
+  namespace: terminus
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
 spec:
-  parentRefs:
-  - name: eg
-    namespace: envoy-gateway-system
-  hostnames:
-  - "terminus.example.com"
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - terminus.beanieiscool.com
+      secretName: terminus-tls
+
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: terminus
-      port: 80
----
-# Envoy Gateway connection limits (optional, remove if using standard Ingress)
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: BackendTrafficPolicy
-metadata:
-  name: terminus-limits
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    name: terminus
-  connection:
-    bufferLimit: 10M
+    - host: terminus.beanieiscool.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: terminus
+                port:
+                  name: http
