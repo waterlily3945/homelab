@@ -53,6 +53,8 @@ spec:
             value: "1"
           - name: TRMNL_PROXY_REFRESH_MINUTES
             value: "15"
+          - name: FORCE_HTTPS
+            value: "1"
         volumeMounts:
         - name: larapaper-data
           mountPath: /var/www/html/storage/app/public/images/generated
