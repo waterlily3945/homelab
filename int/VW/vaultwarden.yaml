@@ -34,6 +34,11 @@ spec:
         env:
           - name: DOMAIN
             value: "https://vw.beanieiscool.com"
+          - name: ADMIN_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: token
+                key: password
         volumeMounts:
         - name: vaultwarden-data
           mountPath: /data
