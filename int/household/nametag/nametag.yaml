@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nametag-photos
-  namespace: nametag
+  namespace: household
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,7 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nametag
-  namespace: nametag
+  namespace: household
 spec:
   replicas: 1
   strategy:
@@ -90,7 +90,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nametag
-  namespace: nametag
+  namespace: household
 spec:
   selector:
     app: nametag
@@ -104,7 +104,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nametag-cron
-  namespace: nametag
+  namespace: household
 spec:
   replicas: 1
   selector:
@@ -145,7 +145,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nametag
-  namespace: nametag
+  namespace: household
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
