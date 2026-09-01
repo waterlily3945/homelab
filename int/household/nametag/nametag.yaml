@@ -33,11 +33,13 @@ spec:
         - name: nametag
           image: ghcr.io/mattogodoy/nametag:latest
           imagePullPolicy: Always
+
           ports:
             - name: http
               containerPort: 3000
 
           env:
+            # PostgreSQL / CloudNativePG
             - name: DB_HOST
               value: postgres-rw.databases.svc.cluster.local
 
@@ -56,6 +58,17 @@ spec:
                   name: nametag-secrets
                   key: DB_PASSWORD
 
+            # NextAuth
+            - name: NEXTAUTH_URL
+              value: https://nametag.beanieiscool.com
+
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: NEXTAUTH_SECRET
+
+            # Cron authentication
             - name: CRON_SECRET
               valueFrom:
                 secretKeyRef:
@@ -70,8 +83,10 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
 
           livenessProbe:
             httpGet:
@@ -79,6 +94,8 @@ spec:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
 
       volumes:
         - name: photos
@@ -118,6 +135,7 @@ spec:
       containers:
         - name: cron
           image: alpine:3.19
+
           env:
             - name: CRON_SECRET
               valueFrom:
@@ -132,10 +150,10 @@ spec:
               apk add --no-cache wget
 
               cat > /etc/crontabs/root <<EOF
-              0 8 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/send-reminders
-              0 3 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/purge-deleted
-              0 2,10,18 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/carddav-sync
-              */5 * * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/geocode
+              0 8 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/send-reminders > /proc/1/fd/1 2>&1
+              0 3 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/purge-deleted > /proc/1/fd/1 2>&1
+              0 2,10,18 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/carddav-sync > /proc/1/fd/1 2>&1
+              */5 * * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/geocode > /proc/1/fd/1 2>&1
               EOF
 
               crond -f -l 2
@@ -150,10 +168,12 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
+
   tls:
     - hosts:
         - nametag.beanieiscool.com
       secretName: nametag-tls
+
   rules:
     - host: nametag.beanieiscool.com
       http:
