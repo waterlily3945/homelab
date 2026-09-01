@@ -75,6 +75,55 @@ spec:
                   name: nametag-secrets
                   key: CRON_SECRET
 
+            # SMTP / Email
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_HOST
+
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_PORT
+
+            - name: SMTP_SECURE
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_SECURE
+
+            - name: SMTP_REQUIRE_TLS
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_REQUIRE_TLS
+
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_USER
+
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_PASS
+
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_FROM
+
+            - name: EMAIL_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: EMAIL_DOMAIN
+
           volumeMounts:
             - name: photos
               mountPath: /app/data/photos
