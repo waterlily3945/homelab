@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nametag-photos
+  namespace: nametag
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nametag
+  namespace: nametag
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nametag
+  template:
+    metadata:
+      labels:
+        app: nametag
+    spec:
+      containers:
+        - name: nametag
+          image: ghcr.io/mattogodoy/nametag:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+
+          env:
+            - name: DB_HOST
+              value: postgres-rw.databases.svc.cluster.local
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              value: nametag
+
+            - name: DB_USER
+              value: nametag
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: DB_PASSWORD
+
+            - name: CRON_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: CRON_SECRET
+
+          volumeMounts:
+            - name: photos
+              mountPath: /app/data/photos
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+
+      volumes:
+        - name: photos
+          persistentVolumeClaim:
+            claimName: nametag-photos
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nametag
+  namespace: nametag
+spec:
+  selector:
+    app: nametag
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nametag-cron
+  namespace: nametag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nametag-cron
+  template:
+    metadata:
+      labels:
+        app: nametag-cron
+    spec:
+      containers:
+        - name: cron
+          image: alpine:3.19
+          env:
+            - name: CRON_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: CRON_SECRET
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache wget
+
+              cat > /etc/crontabs/root <<EOF
+              0 8 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/send-reminders
+              0 3 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/purge-deleted
+              0 2,10,18 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/carddav-sync
+              */5 * * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/geocode
+              EOF
+
+              crond -f -l 2
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nametag
+  namespace: nametag
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - nametag.beanieiscool.com
+      secretName: nametag-tls
+  rules:
+    - host: nametag.beanieiscool.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nametag
+                port:
+                  name: http
