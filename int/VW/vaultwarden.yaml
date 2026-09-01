@@ -30,10 +30,15 @@ spec:
       - name: vaultwarden      
         image: vaultwarden/server:latest        
         ports:
-        - containerPort: 8080
+        - containerPort: 80
         env:
           - name: DOMAIN
             value: "https://vw.beanieiscool.com"
+          - name: ADMIN_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: token
+                key: password
         volumeMounts:
         - name: vaultwarden-data
           mountPath: /data
@@ -52,7 +57,7 @@ spec:
     app: vaultwarden
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -78,3 +83,4 @@ spec:
   - hosts:
     - vw.beanieiscool.com
     secretName: vaultwarden-cert
+
