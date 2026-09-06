@@ -2,14 +2,14 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: uptimekuma-pvc
-  namespace: monitoring 
+  namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteOnce            
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 5gi 
-  storageClassName: longhorn 
+      storage: 5Gi            
+  storageClassName: longhorn  
 ---
 apiVersion: apps/v1
 kind: Deployment
