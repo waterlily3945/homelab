@@ -1,0 +1,236 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nametag-photos
+  namespace: household
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nametag
+  namespace: household
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nametag
+  template:
+    metadata:
+      labels:
+        app: nametag
+    spec:
+      containers:
+        - name: nametag
+          image: ghcr.io/mattogodoy/nametag:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 3000
+
+          env:
+            # PostgreSQL / CloudNativePG
+            - name: DB_HOST
+              value: postgres-rw.databases.svc.cluster.local
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              value: nametag
+
+            - name: DB_USER
+              value: nametag
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: DB_PASSWORD
+
+            # NextAuth
+            - name: NEXTAUTH_URL
+              value: https://nametag.beanieiscool.com
+
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: NEXTAUTH_SECRET
+
+            # Cron authentication
+            - name: CRON_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: CRON_SECRET
+
+            # SMTP / Email
+            - name: SMTP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_HOST
+
+            - name: SMTP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_PORT
+
+            - name: SMTP_SECURE
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_SECURE
+
+            - name: SMTP_REQUIRE_TLS
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_REQUIRE_TLS
+
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_USER
+
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_PASS
+
+            - name: SMTP_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: SMTP_FROM
+
+            - name: EMAIL_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: EMAIL_DOMAIN
+
+          volumeMounts:
+            - name: photos
+              mountPath: /app/data/photos
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+      volumes:
+        - name: photos
+          persistentVolumeClaim:
+            claimName: nametag-photos
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nametag
+  namespace: household
+spec:
+  selector:
+    app: nametag
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nametag-cron
+  namespace: household
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nametag-cron
+  template:
+    metadata:
+      labels:
+        app: nametag-cron
+    spec:
+      containers:
+        - name: cron
+          image: alpine:3.19
+
+          env:
+            - name: CRON_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nametag-secrets
+                  key: CRON_SECRET
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache wget
+
+              cat > /etc/crontabs/root <<EOF
+              0 8 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/send-reminders > /proc/1/fd/1 2>&1
+              0 3 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/purge-deleted > /proc/1/fd/1 2>&1
+              0 2,10,18 * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/carddav-sync > /proc/1/fd/1 2>&1
+              */5 * * * * wget -q -O - --header="Authorization: Bearer $CRON_SECRET" http://nametag:3000/api/cron/geocode > /proc/1/fd/1 2>&1
+              EOF
+
+              crond -f -l 2
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nametag
+  namespace: household
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - nametag.beanieiscool.com
+      secretName: nametag-tls
+
+  rules:
+    - host: nametag.beanieiscool.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nametag
+                port:
+                  name: http

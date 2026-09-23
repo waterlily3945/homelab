@@ -1,39 +1,39 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: uptimekuma-pvc       
+  name: uptimekuma-pvc
   namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteOnce           
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi 
+      storage: 5Gi            
   storageClassName: longhorn  
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: uptimekuma            
-  namespace: monitoring     
+  namespace: monitoring      
 spec:
-  replicas: 1       
+  replicas: 1        
   selector:
     matchLabels:
       app: uptimekuma         
   template:
     metadata:
       labels:
-        app: uptimekuma      
+        app: uptimekuma       
     spec:
       containers:
-      - name: uptimekuma    
+      - name: uptimekuma      
         image: louislam/uptime-kuma:2        
         ports:
-        - containerPort: 3001  
+        - containerPort: 3001
         volumeMounts:
         - name: uptimekuma-data
-          mountPath: /app/data       
+          mountPath: /app/data
       volumes:
       - name: uptimekuma-data
         persistentVolumeClaim:
@@ -42,36 +42,36 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: uptimekuma           
+  name: uptimekuma
   namespace: monitoring
 spec:
   selector:
-    app: uptimekuma           
+    app: uptimekuma
   ports:
-  - port: 80     
-    targetPort: 3001 
+  - port: 80
+    targetPort: 3001
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: uptimekuma-ingress   
+  name: uptimekuma-ingress
   namespace: monitoring
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod  
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  ingressClassName: traefik  
+  ingressClassName: traefik
   rules:
-  - host: kuma.beanieiscool.com                  
+  - host: kuma.beanieiscool.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: uptimekuma         
+            name: uptimekuma
             port:
-              number: 80  
+              number: 80
   tls:
   - hosts:
-    - kuma.beanieiscool.com                   
-    secretName: uptimekuma-cert      
+    - kuma.beanieiscool.com
+    secretName: uptimekuma-cert

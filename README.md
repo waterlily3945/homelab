@@ -34,3 +34,4 @@ the EXT Folder is all of my externally accessible items that are also behind a b
 The apps folder are all of my manifests I feel comfortable posting publically
 
 template-full-storage.yaml is what I use as a starting point for new pod deployments
+

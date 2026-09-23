@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lubelogkeys-pvc
+  namespace: household
+spec:
+  accessModes:
+    - ReadWriteOnce            
+  resources:
+    requests:
+      storage: 5Gi 
+  storageClassName: longhorn
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lubelogdata-pvc
+  namespace: household
+spec:
+  accessModes:
+    - ReadWriteOnce            
+  resources:
+    requests:
+      storage: 10Gi 
+  storageClassName: longhorn
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lubelog            
+  namespace: household     
+spec:
+  replicas: 1       
+  selector:
+    matchLabels:
+      app: lubelog         
+  template:
+    metadata:
+      labels:
+        app: lubelog       
+    spec:
+      containers:
+      - name: lubelog      
+        image: ghcr.io/hargata/lubelogger:latest        
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: lubelog-keys
+          mountPath: /App/data
+        volumeMounts:
+        - name: lubelog-data
+          mountPath: /root/.aspnet/DataProtection-Keys
+      volumes:
+      - name: lubelog-keys
+        persistentVolumeClaim:
+          claimName: lubelogkeys-pvc
+      volumes:
+      - name: lubelog-data
+        persistentVolumeClaim:
+          claimName: lubelogdata-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lubelog
+  namespace: household
+spec:
+  selector:
+    app: lubelog
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lubelog-ingress
+  namespace: household
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: lubelog.beanieiscool.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lubelog
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - lubelog.beanieiscool.com
+    secretName: lubelog-cert

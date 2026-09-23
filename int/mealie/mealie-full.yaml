@@ -40,7 +40,8 @@ spec:
             value: "America/Chicago"
         volumeMounts:
         - name: mealie-data
-          mountPath: /app/data
+          mountPath: /app/data       
+      volumes:
       - name: mealie-data
         persistentVolumeClaim:
           claimName: mealie-data-pvc
