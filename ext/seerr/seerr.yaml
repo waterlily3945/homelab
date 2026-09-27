@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seerr-pvc
+  namespace: external
+spec:
+  accessModes:
+    - ReadWriteOnce            
+  resources:
+    requests:
+      storage: 5Gi 
+  storageClassName: longhorn 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr            
+  namespace: external      
+spec:
+  replicas: 1        
+  selector:
+    matchLabels:
+      app: seerr         
+  template:
+    metadata:
+      labels:
+        app: seerr       
+    spec:
+      containers:
+      - name: seerr      
+        image: linuxserver/seerr:latest
+        env:
+          - name: PUID
+            value: "100"
+          - name: PGID
+            value: "100"
+        ports:
+        - containerPort: 7878
+        volumeMounts:
+        - name: seerr-data
+          mountPath: /config
+      volumes:
+      - name: seerr-data
+        persistentVolumeClaim:
+          claimName: seerr-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seerr
+  namespace: external
+spec:
+  selector:
+    app: seerr
+  ports:
+  - port: 80
+    targetPort: 7878
