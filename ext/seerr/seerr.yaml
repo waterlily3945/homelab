@@ -24,7 +24,12 @@ spec:
   template:
     metadata:
       labels:
-        app: seerr       
+        app: seerr
+    spec:
+      securityContext:
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100        
     spec:
       containers:
       - name: seerr      
