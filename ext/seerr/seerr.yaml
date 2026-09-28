@@ -122,9 +122,8 @@ config:
 ingress:
   enabled: true
   ingressClassName: 'traefik'
-  annotations: {}
-  #  kubernetes.io/ingress.class: nginx
-  #  kubernetes.io/tls-acme: "true"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod 
   hosts:
     - host: seerr.beanieiscool.com
       paths:
