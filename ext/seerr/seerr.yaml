@@ -38,7 +38,7 @@ spec:
         - containerPort: 7878
         volumeMounts:
         - name: seerr-data
-          mountPath: /config
+          mountPath: /app/config
       volumes:
       - name: seerr-data
         persistentVolumeClaim:
