@@ -54,7 +54,7 @@ spec:
     app: seerr
   ports:
   - port: 80
-    targetPort: 7878
+    targetPort: 5055
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
