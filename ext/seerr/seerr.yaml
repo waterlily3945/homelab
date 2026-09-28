@@ -29,11 +29,6 @@ spec:
       containers:
       - name: seerr      
         image: ghcr.io/seerr-team/seerr:latest
-        env:
-          - name: PUID
-            value: "100"
-          - name: PGID
-            value: "100"
         ports:
         - containerPort: 7878
         volumeMounts:
