@@ -55,3 +55,28 @@ spec:
   ports:
   - port: 80
     targetPort: 7878
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: seerr-ingress
+  namespace: external
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod 
+spec:
+  ingressClassName: traefik         
+  rules:
+  - host: seerr.beanieiscool.com      
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: seerr
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - seerr.beanieiscool.com
+    secretName: seerr-cert
